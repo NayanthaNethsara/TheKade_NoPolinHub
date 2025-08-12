@@ -5,6 +5,9 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
+import jakarta.validation.constraints.NotNull;
+
+import com.thekade.nopolin.authservice.entity.Role;
 
 @Data
 public class RegisterRequest {

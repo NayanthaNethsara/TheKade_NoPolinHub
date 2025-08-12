@@ -6,6 +6,7 @@ import com.thekade.nopolin.authservice.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import com.thekade.nopolin.authservice.entity.Role;
 
 @Service
 @RequiredArgsConstructor
