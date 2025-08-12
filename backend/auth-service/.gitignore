@@ -36,3 +36,4 @@ build/
 ### Environment Variables ###
 .env
 .env.local
+application-dev.properties
