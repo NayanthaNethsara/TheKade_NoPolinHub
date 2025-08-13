@@ -1,7 +1,5 @@
 package com.thekade.nopolin.auth_service.dto;
 
-import com.thekade.nopolin.auth_service.entity.Role;
-
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -11,11 +9,9 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class RegisterRequest {
+public class AuthenticationRequest {
 
   private String username;
-  private String email;
-  private String password;
-  private String phoneNumber;
-  private Role role;
+  String password;
+
 }

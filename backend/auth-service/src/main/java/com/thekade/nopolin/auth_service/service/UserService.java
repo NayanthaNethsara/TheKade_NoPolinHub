@@ -1,46 +1,78 @@
-package com.thekade.nopolin.authservice.service;
+package com.thekade.nopolin.auth_service.service;
 
-import com.thekade.nopolin.authservice.dto.RegisterRequest;
-import com.thekade.nopolin.authservice.entity.User;
-import com.thekade.nopolin.authservice.repository.UserRepository;
+import com.thekade.nopolin.auth_service.dto.UserResponse;
+import com.thekade.nopolin.auth_service.entity.Role;
+import com.thekade.nopolin.auth_service.entity.User;
+import com.thekade.nopolin.auth_service.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
-import com.thekade.nopolin.authservice.entity.Role;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
+public interface UserService {
+    List<UserResponse> getAllUsers();
+    List<UserResponse> getUsersByRole(Role role);
+    void deleteUserById(Long id);
+    void deactivateUser(Long id);
+    void activateUser(Long id);
+}
 
 @Service
 @RequiredArgsConstructor
-public class UserService {
+class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
-    private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
-    public boolean usernameExists(String username) {
-        return userRepository.existsByUsername(username);
+    private UserResponse mapToDto(User user) {
+        return UserResponse.builder()
+                .id(user.getId())
+                .username(user.getUsername())
+                .email(user.getEmail())
+                .phoneNumber(user.getPhoneNumber())
+                .role(user.getRole())
+                .isActive(user.isActive())
+                .build();
     }
 
-    public boolean emailExists(String email) {
-        return userRepository.existsByEmail(email);
+    @Override
+    public List<UserResponse> getAllUsers() {
+        return userRepository.findAll()
+                .stream()
+                .filter(user -> user.getRole() != Role.ADMIN)
+                .map(this::mapToDto)
+                .collect(Collectors.toList());
     }
 
-    public boolean nicExists(String nic) {
-        return userRepository.existsByNic(nic);
+    @Override
+    public List<UserResponse> getUsersByRole(Role role) {
+        return userRepository.findByRole(role)
+                .stream()
+                .map(this::mapToDto)
+                .collect(Collectors.toList());
     }
 
-    public boolean phoneExists(String phone) {
-        return userRepository.existsByPhone(phone);
+    @Override
+    public void deleteUserById(Long id) {
+        if (!userRepository.existsById(id)) {
+            throw new RuntimeException("User not found with ID: " + id);
+        }
+        userRepository.deleteById(id);
     }
 
-    public User registerUser(RegisterRequest request) {
-        User user = new User();
-        user.setUsername(request.getUsername());
-        user.setPassword(passwordEncoder.encode(request.getPassword()));
-        user.setFullName(request.getFullName());
-        user.setEmail(request.getEmail());
-        user.setNic(request.getNic());
-        user.setPhone(request.getPhone());
-        user.setRole(request.getRole());
+    @Override
+    public void deactivateUser(Long id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("User not found with ID: " + id));
+        user.setActive(false);
+        userRepository.save(user);
+    }
 
-        return userRepository.save(user);
+    @Override
+    public void activateUser(Long id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("User not found with ID: " + id));
+        user.setActive(true);
+        userRepository.save(user);
     }
 }

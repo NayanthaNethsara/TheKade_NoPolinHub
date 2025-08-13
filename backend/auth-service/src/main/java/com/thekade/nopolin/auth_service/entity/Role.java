@@ -1,4 +1,4 @@
-package com.thekade.nopolin.authservice.entity;
+package com.thekade.nopolin.auth_service.entity;
 
 public enum Role {
     ADMIN,

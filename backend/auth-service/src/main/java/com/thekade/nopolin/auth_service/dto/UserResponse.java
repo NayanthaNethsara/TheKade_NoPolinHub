@@ -9,13 +9,13 @@ import lombok.NoArgsConstructor;
 
 @Data
 @Builder
-@AllArgsConstructor
 @NoArgsConstructor
-public class RegisterRequest {
-
-  private String username;
-  private String email;
-  private String password;
-  private String phoneNumber;
-  private Role role;
+@AllArgsConstructor
+public class UserResponse {
+    private Long id;
+    private String username;
+    private String email;
+    private String phoneNumber;
+    private Role role;
+    private boolean isActive;
 }
