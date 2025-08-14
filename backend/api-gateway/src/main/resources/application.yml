@@ -8,11 +8,11 @@ spring:
     gateway:
       routes:
         - id: appointment-service
-          uri: http://localhost:8082
+          uri: http://appointment-service:8082 # service name, not localhost
           predicates:
             - Path=/appointments/**
         - id: auth-service
-          uri: http://localhost:8081
+          uri: http://auth-service:8081 # service name, not localhost
           predicates:
             - Path=/api/auth/**
       globalcors:
