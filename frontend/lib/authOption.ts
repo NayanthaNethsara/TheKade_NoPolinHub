@@ -19,18 +19,18 @@ export const authOptions: NextAuthOptions = {
         const formData = new URLSearchParams();
         formData.append("username", credentials.username);
         formData.append("password", credentials.password);
-        formData.append("scope", "");
-        formData.append("client_id", "");
-        formData.append("client_secret", "");
 
         try {
-          const res = await fetch(`${API_BASE_URL}/auth/token`, {
+          const res = await fetch(`${API_BASE_URL}/api/auth/authenticate`, {
             method: "POST",
             headers: {
-              "Content-Type": "application/x-www-form-urlencoded",
+              "Content-Type": "application/json",
               Accept: "application/json",
             },
-            body: formData.toString(),
+            body: JSON.stringify({
+              username: formData.get("username"),
+              password: formData.get("password"),
+            }),
           });
 
           if (!res.ok) return null;
