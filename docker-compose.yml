@@ -1,0 +1,44 @@
+services:
+  auth-service:
+    build: ./backend/auth-service
+    platform: linux/amd64
+    ports:
+      - "8081:8081"
+    env_file:
+      - ./backend/.env
+
+  appointment-service:
+    build: ./backend/appointment-service
+    platform: linux/amd64
+    ports:
+      - "8082:8082"
+    env_file:
+      - ./backend/.env
+
+  api-gateway:
+    build: ./backend/api-gateway
+    platform: linux/amd64
+    ports:
+      - "8080:8080"
+    env_file:
+      - ./backend/.env
+    depends_on:
+      - auth-service
+      - appointment-service
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:3000"
+    env_file:
+      - ./frontend/.env
+    depends_on:
+      - api-gateway
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: nopolinuser
+      POSTGRES_PASSWORD: amali
+      POSTGRES_DB: nopolin
+    ports:
+      - "5432:5432"
