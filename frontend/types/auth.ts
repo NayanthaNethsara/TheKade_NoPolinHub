@@ -10,5 +10,6 @@ export interface AuthResponse {
 
 export interface JWTPayload {
   sub: string;
+  role: "ADMIN" | "CITIZEN";
   exp: number;
 }

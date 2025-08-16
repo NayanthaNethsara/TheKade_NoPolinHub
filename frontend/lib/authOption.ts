@@ -45,6 +45,7 @@ export const authOptions: NextAuthOptions = {
             accessToken: data.access_token,
             refreshToken: data.refresh_token,
             username: decoded.sub,
+            role: decoded.role as "ADMIN" | "CITIZEN",
           };
         } catch (error) {
           console.error("Authorization error:", error);
@@ -80,6 +81,7 @@ export const authOptions: NextAuthOptions = {
       session.user = {
         username: token.username as string,
         accessToken: token.accessToken as string,
+        role: token.role as "ADMIN" | "CITIZEN",
       };
       return session;
     },
