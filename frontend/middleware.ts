@@ -10,7 +10,9 @@ export async function middleware(req: NextRequest) {
       secret: process.env.NEXTAUTH_SECRET,
     });
 
-    const isPublic = ["/login", "/forget-password"].includes(pathname);
+    const isPublic = ["/login", "/forget-password", "/register"].includes(
+      pathname
+    );
 
     console.log("ExpireData:", token?.exp);
     console.log("Date Now", Date.now());
