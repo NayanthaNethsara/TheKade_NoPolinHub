@@ -1,9 +1,9 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { useSession } from "next-auth/react"
-import { useRouter } from "next/navigation"
-import { motion } from "framer-motion"
+import { useState } from "react";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
 import {
   Search,
   Filter,
@@ -16,34 +16,34 @@ import {
   MapPin,
   MessageSquare,
   Download,
-} from "lucide-react"
-import { Card, CardContent } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Badge } from "@/components/ui/badge"
+} from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
 
 interface AddressChangeRequest {
-  id: string
-  userId: string
-  userName: string
-  userEmail: string
-  userNIC: string
-  currentAddress: string
-  newAddress: string
-  reason: string
+  id: string;
+  userId: string;
+  userName: string;
+  userEmail: string;
+  userNIC: string;
+  currentAddress: string;
+  newAddress: string;
+  reason: string;
   documents: {
-    name: string
-    type: string
-    size: number
-    url: string
-  }[]
-  status: "pending" | "approved" | "rejected"
-  submittedDate: string
-  reviewedDate?: string
-  adminNotes?: string
-  reviewedBy?: string
+    name: string;
+    type: string;
+    size: number;
+    url: string;
+  }[];
+  status: "pending" | "approved" | "rejected";
+  submittedDate: string;
+  reviewedDate?: string;
+  adminNotes?: string;
+  reviewedBy?: string;
 }
 
 const mockRequests: AddressChangeRequest[] = [
@@ -100,29 +100,33 @@ const mockRequests: AddressChangeRequest[] = [
     adminNotes: "All documents verified. Retirement confirmed.",
     reviewedBy: "Admin User",
   },
-]
+];
 
 const statusColors = {
   pending: "bg-gray-200 text-gray-900 dark:bg-gray-800/30 dark:text-gray-200",
   approved: "bg-gray-300 text-gray-900 dark:bg-gray-700/40 dark:text-gray-100",
   rejected: "bg-gray-400 text-gray-900 dark:bg-gray-600/50 dark:text-gray-100",
-}
+};
 
 export default function AdminApprovalsPage() {
-  const { data: session } = useSession()
-  const router = useRouter()
-  const [requests, setRequests] = useState<AddressChangeRequest[]>(mockRequests)
-  const [searchTerm, setSearchTerm] = useState("")
-  const [statusFilter, setStatusFilter] = useState<string>("all")
-  const [selectedRequest, setSelectedRequest] = useState<AddressChangeRequest | null>(null)
-  const [showReviewModal, setShowReviewModal] = useState(false)
-  const [reviewAction, setReviewAction] = useState<"approve" | "reject" | null>(null)
-  const [adminNotes, setAdminNotes] = useState("")
+  const { data: session } = useSession();
+  const router = useRouter();
+  const [requests, setRequests] =
+    useState<AddressChangeRequest[]>(mockRequests);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [selectedRequest, setSelectedRequest] =
+    useState<AddressChangeRequest | null>(null);
+  const [showReviewModal, setShowReviewModal] = useState(false);
+  const [reviewAction, setReviewAction] = useState<"approve" | "reject" | null>(
+    null
+  );
+  const [adminNotes, setAdminNotes] = useState("");
 
   // Redirect if not admin
-  if (session?.user?.role !== "admin") {
-    router.push("/dashboard")
-    return null
+  if (session?.user?.role !== "ADMIN") {
+    router.push("/dashboard");
+    return null;
   }
 
   const filteredRequests = requests.filter((request) => {
@@ -131,39 +135,50 @@ export default function AdminApprovalsPage() {
       request.userEmail.toLowerCase().includes(searchTerm.toLowerCase()) ||
       request.userNIC.toLowerCase().includes(searchTerm.toLowerCase()) ||
       request.newAddress.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      request.currentAddress.toLowerCase().includes(searchTerm.toLowerCase())
+      request.currentAddress.toLowerCase().includes(searchTerm.toLowerCase());
 
-    const matchesStatus = statusFilter === "all" || request.status === statusFilter
+    const matchesStatus =
+      statusFilter === "all" || request.status === statusFilter;
 
-    return matchesSearch && matchesStatus
-  })
+    return matchesSearch && matchesStatus;
+  });
 
-  const handleReviewRequest = (request: AddressChangeRequest, action: "approve" | "reject") => {
-    setSelectedRequest(request)
-    setReviewAction(action)
-    setAdminNotes("")
-    setShowReviewModal(true)
-  }
+  const handleReviewRequest = (
+    request: AddressChangeRequest,
+    action: "approve" | "reject"
+  ) => {
+    setSelectedRequest(request);
+    setReviewAction(action);
+    setAdminNotes("");
+    setShowReviewModal(true);
+  };
 
   const handleSubmitReview = () => {
-    if (!selectedRequest || !reviewAction) return
+    if (!selectedRequest || !reviewAction) return;
 
     const updatedRequest = {
       ...selectedRequest,
-      status: reviewAction === "approve" ? ("approved" as const) : ("rejected" as const),
+      status:
+        reviewAction === "approve"
+          ? ("approved" as const)
+          : ("rejected" as const),
       reviewedDate: new Date().toISOString().split("T")[0],
       adminNotes,
-      reviewedBy: session?.user?.name || "Admin",
-    }
+      reviewedBy: session?.user?.username || "ADMIN",
+    };
 
-    setRequests((prev) => prev.map((req) => (req.id === selectedRequest.id ? updatedRequest : req)))
-    setShowReviewModal(false)
-    setSelectedRequest(null)
-    setReviewAction(null)
-    setAdminNotes("")
-  }
+    setRequests((prev) =>
+      prev.map((req) => (req.id === selectedRequest.id ? updatedRequest : req))
+    );
+    setShowReviewModal(false);
+    setSelectedRequest(null);
+    setReviewAction(null);
+    setAdminNotes("");
+  };
 
-  const pendingCount = requests.filter((req) => req.status === "pending").length
+  const pendingCount = requests.filter(
+    (req) => req.status === "pending"
+  ).length;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-gray-100 to-gray-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 p-6">
@@ -175,8 +190,12 @@ export default function AdminApprovalsPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
         >
-          <h1 className="text-4xl font-bold text-gray-900 dark:text-gray-100">Address Change Approvals</h1>
-          <p className="text-lg text-gray-600 dark:text-gray-400">Review and approve citizen address change requests</p>
+          <h1 className="text-4xl font-bold text-gray-900 dark:text-gray-100">
+            Address Change Approvals
+          </h1>
+          <p className="text-lg text-gray-600 dark:text-gray-400">
+            Review and approve citizen address change requests
+          </p>
           <div className="flex justify-center">
             <Badge className="bg-gray-200 text-gray-900 dark:bg-gray-800/30 dark:text-gray-200 text-lg px-4 py-2">
               {pendingCount} Pending Request{pendingCount !== 1 ? "s" : ""}
@@ -242,7 +261,9 @@ export default function AdminApprovalsPage() {
                           <User className="h-6 w-6 text-gray-600 dark:text-gray-400" />
                         </div>
                         <div>
-                          <h3 className="font-semibold text-lg text-gray-900 dark:text-gray-100">{request.userName}</h3>
+                          <h3 className="font-semibold text-lg text-gray-900 dark:text-gray-100">
+                            {request.userName}
+                          </h3>
                           <div className="flex items-center space-x-4 text-sm text-gray-600 dark:text-gray-400">
                             <span>{request.userEmail}</span>
                             <span>NIC: {request.userNIC}</span>
@@ -258,22 +279,32 @@ export default function AdminApprovalsPage() {
                           </Label>
                           <div className="flex items-start space-x-2">
                             <MapPin className="h-4 w-4 text-gray-400 mt-0.5" />
-                            <p className="text-sm text-gray-600 dark:text-gray-400">{request.currentAddress}</p>
+                            <p className="text-sm text-gray-600 dark:text-gray-400">
+                              {request.currentAddress}
+                            </p>
                           </div>
                         </div>
                         <div className="space-y-2">
-                          <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">New Address</Label>
+                          <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                            New Address
+                          </Label>
                           <div className="flex items-start space-x-2">
                             <MapPin className="h-4 w-4 text-gray-400 mt-0.5" />
-                            <p className="text-sm text-gray-600 dark:text-gray-400">{request.newAddress}</p>
+                            <p className="text-sm text-gray-600 dark:text-gray-400">
+                              {request.newAddress}
+                            </p>
                           </div>
                         </div>
                       </div>
 
                       {/* Reason */}
                       <div className="space-y-2">
-                        <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">Reason</Label>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">{request.reason}</p>
+                        <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                          Reason
+                        </Label>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                          {request.reason}
+                        </p>
                       </div>
 
                       {/* Documents */}
@@ -289,7 +320,9 @@ export default function AdminApprovalsPage() {
                             >
                               <FileText className="h-4 w-4 text-gray-400" />
                               <span>{doc.name}</span>
-                              <span className="text-gray-500">({doc.size}MB)</span>
+                              <span className="text-gray-500">
+                                ({doc.size}MB)
+                              </span>
                               <Button variant="ghost" size="sm">
                                 <Download className="h-3 w-3" />
                               </Button>
@@ -315,13 +348,19 @@ export default function AdminApprovalsPage() {
                       {/* Admin Notes */}
                       {request.adminNotes && (
                         <div className="space-y-2">
-                          <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">Admin Notes</Label>
+                          <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Admin Notes
+                          </Label>
                           <div className="flex items-start space-x-2">
                             <MessageSquare className="h-4 w-4 text-gray-400 mt-0.5" />
-                            <p className="text-sm text-gray-600 dark:text-gray-400">{request.adminNotes}</p>
+                            <p className="text-sm text-gray-600 dark:text-gray-400">
+                              {request.adminNotes}
+                            </p>
                           </div>
                           {request.reviewedBy && (
-                            <p className="text-xs text-gray-500">Reviewed by: {request.reviewedBy}</p>
+                            <p className="text-xs text-gray-500">
+                              Reviewed by: {request.reviewedBy}
+                            </p>
                           )}
                         </div>
                       )}
@@ -330,14 +369,17 @@ export default function AdminApprovalsPage() {
                     {/* Status and Actions */}
                     <div className="flex flex-col items-end space-y-3">
                       <Badge className={statusColors[request.status]}>
-                        {request.status.charAt(0).toUpperCase() + request.status.slice(1)}
+                        {request.status.charAt(0).toUpperCase() +
+                          request.status.slice(1)}
                       </Badge>
 
                       {request.status === "pending" && (
                         <div className="flex space-x-2">
                           <Button
                             size="sm"
-                            onClick={() => handleReviewRequest(request, "approve")}
+                            onClick={() =>
+                              handleReviewRequest(request, "approve")
+                            }
                             className="bg-gray-600 hover:bg-gray-700 text-white"
                           >
                             <CheckCircle className="h-4 w-4 mr-1" />
@@ -346,7 +388,9 @@ export default function AdminApprovalsPage() {
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={() => handleReviewRequest(request, "reject")}
+                            onClick={() =>
+                              handleReviewRequest(request, "reject")
+                            }
                             className="border-gray-300 hover:bg-gray-100 dark:border-gray-600 dark:hover:bg-gray-800"
                           >
                             <XCircle className="h-4 w-4 mr-1" />
@@ -383,8 +427,12 @@ export default function AdminApprovalsPage() {
             <div className="text-gray-400 mb-4">
               <Search className="h-12 w-12 mx-auto" />
             </div>
-            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">No requests found</h3>
-            <p className="text-gray-500 dark:text-gray-400">Try adjusting your search or filter criteria</p>
+            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
+              No requests found
+            </h3>
+            <p className="text-gray-500 dark:text-gray-400">
+              Try adjusting your search or filter criteria
+            </p>
           </motion.div>
         )}
 
@@ -405,9 +453,14 @@ export default function AdminApprovalsPage() {
               <div className="p-6">
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
-                    {reviewAction === "approve" ? "Approve" : "Reject"} Address Change Request
+                    {reviewAction === "approve" ? "Approve" : "Reject"} Address
+                    Change Request
                   </h2>
-                  <Button onClick={() => setShowReviewModal(false)} variant="ghost" size="sm">
+                  <Button
+                    onClick={() => setShowReviewModal(false)}
+                    variant="ghost"
+                    size="sm"
+                  >
                     <XCircle className="h-4 w-4" />
                   </Button>
                 </div>
@@ -417,7 +470,8 @@ export default function AdminApprovalsPage() {
                     <h3 className="font-medium mb-2">Request Summary</h3>
                     <div className="space-y-1 text-sm text-gray-600 dark:text-gray-400">
                       <p>
-                        <strong>User:</strong> {selectedRequest.userName} ({selectedRequest.userEmail})
+                        <strong>User:</strong> {selectedRequest.userName} (
+                        {selectedRequest.userEmail})
                       </p>
                       <p>
                         <strong>From:</strong> {selectedRequest.currentAddress}
@@ -433,7 +487,8 @@ export default function AdminApprovalsPage() {
 
                   <div className="space-y-2">
                     <Label htmlFor="adminNotes">
-                      Admin Notes {reviewAction === "reject" ? "(Required)" : "(Optional)"}
+                      Admin Notes{" "}
+                      {reviewAction === "reject" ? "(Required)" : "(Optional)"}
                     </Label>
                     <Textarea
                       id="adminNotes"
@@ -486,5 +541,5 @@ export default function AdminApprovalsPage() {
         )}
       </div>
     </div>
-  )
+  );
 }

@@ -1,9 +1,16 @@
 import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { jwtDecode } from "jwt-decode";
-import { JWTPayload } from "@/types/auth";
+import { readIdFromJwt, readNameFromJwt, readRoleFromJwt } from "@/lib/auth";
 
-const API_BASE_URL = process.env.API_BASE_URL;
+const API_BASE_URL =
+  process.env.API_BASE_URL || process.env.NEXT_PUBLIC_API_BASE_URL;
+
+interface DecodedJWT {
+  sub: string;
+  role: string;
+  exp: number;
+}
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -16,80 +23,84 @@ export const authOptions: NextAuthOptions = {
       async authorize(credentials) {
         if (!credentials) return null;
 
-        const formData = new URLSearchParams();
-        formData.append("username", credentials.username);
-        formData.append("password", credentials.password);
-
         try {
           const res = await fetch(`${API_BASE_URL}/api/auth/authenticate`, {
             method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Accept: "application/json",
-            },
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-              username: formData.get("username"),
-              password: formData.get("password"),
+              username: credentials.username,
+              password: credentials.password,
             }),
           });
 
-          if (!res.ok) return null;
+          if (!res.ok) {
+            return null;
+          }
 
           const data = await res.json();
-          const decoded = jwtDecode<JWTPayload>(data.access_token);
 
-          if (!decoded || !decoded.sub) return null;
+          const username = readNameFromJwt(data.access_token);
+          const role = readRoleFromJwt(data.access_token);
+          const userId = readIdFromJwt(data.access_token);
+
+          if (!username || !role) return null;
 
           return {
-            id: decoded.sub,
+            id: username,
             accessToken: data.access_token,
             refreshToken: data.refresh_token,
-            username: decoded.sub,
-            role: decoded.role as "ADMIN" | "CITIZEN",
+            username,
+            role,
+            userId,
           };
         } catch (error) {
-          console.error("Authorization error:", error);
+          console.error("🔥 Error in authorize:", error);
           return null;
         }
       },
     }),
   ],
-
   pages: {
     signIn: "/login",
   },
-
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        const { accessToken, username } = user as unknown as {
+        const typedUser = user as unknown as {
           accessToken: string;
+          refreshToken: string;
           username: string;
+          role: string;
+          userId: number;
         };
+        const decoded = jwtDecode<DecodedJWT>(typedUser.accessToken);
 
-        const decoded = jwtDecode<JWTPayload>(accessToken);
-        token.accessToken = accessToken;
-        token.username = username;
-        token.exp = decoded.exp;
-        token.sub = decoded.sub;
+        token.accessToken = typedUser.accessToken;
+        token.refreshToken = typedUser.refreshToken;
+        token.username = typedUser.username;
+        token.role = typedUser.role;
+        token.accessTokenExpires = decoded.exp * 1000;
+        token.userId = typedUser.userId;
       }
 
+      // Check if token is still valid
+      if (Date.now() < (token.accessTokenExpires as number)) {
+        return token;
+      }
+
+      // TODO: refresh token flow
       return token;
     },
 
     async session({ session, token }) {
       session.user = {
         username: token.username as string,
+        role: token.role as string,
         accessToken: token.accessToken as string,
-        role: token.role as "ADMIN" | "CITIZEN",
+        userId: token.userId as number,
       };
       return session;
     },
   },
-
-  session: {
-    strategy: "jwt",
-  },
-
   secret: process.env.NEXTAUTH_SECRET,
 };

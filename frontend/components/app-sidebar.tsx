@@ -31,10 +31,9 @@ import {
 } from "@/components/ui/sidebar";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { signOut, useSession } from "next-auth/react";
-import { useState } from "react";
 
-// Menu items.
-const items = [
+// Citizen menu items
+const citizenItems = [
   {
     title: "Dashboard",
     url: "/dashboard",
@@ -77,6 +76,7 @@ const items = [
   },
 ];
 
+// Admin menu items
 const adminItems = [
   {
     title: "Users",
@@ -96,17 +96,20 @@ const adminItems = [
 ];
 
 export function AppSidebar() {
-  const [user] = useState({
-    name: "Nayantha Nethsara",
-    role: "CITIZEN",
-    avatar: "/avatars/default.jpg",
-  });
-
   const { data: session } = useSession();
 
-  if (session) {
-    user.name = session.user.username ?? "Nayantha Nethsara";
+  if (!session) {
+    return null; // Don't render sidebar if not authenticated
   }
+
+  const user = {
+    username: session.user.username || "Guest",
+    role: session.user.role?.toUpperCase() || "CITIZEN",
+  };
+
+  // Show items based on role
+  const visibleItems = user.role === "ADMIN" ? adminItems : citizenItems;
+
   return (
     <Sidebar
       variant="inset"
@@ -132,10 +135,12 @@ export function AppSidebar() {
 
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Main Menu</SidebarGroupLabel>
+          <SidebarGroupLabel>
+            {user.role === "ADMIN" ? "Administration" : "Main Menu"}
+          </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {items.map((item, index) => (
+              {visibleItems.map((item, index) => (
                 <motion.div
                   key={item.title}
                   initial={{ opacity: 0, x: -20 }}
@@ -147,41 +152,10 @@ export function AppSidebar() {
                       asChild
                       className="hover:bg-white/50 dark:hover:bg-slate-800/50 hover:backdrop-blur-sm transition-all duration-200"
                     >
-                      <a href={item.url}>
+                      <Link href={item.url}>
                         <item.icon />
                         <span>{item.title}</span>
-                      </a>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                </motion.div>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-
-        <SidebarGroup>
-          <SidebarGroupLabel>Administration</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {adminItems.map((item, index) => (
-                <motion.div
-                  key={item.title}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{
-                    delay: (items.length + index) * 0.1,
-                    duration: 0.3,
-                  }}
-                >
-                  <SidebarMenuItem>
-                    <SidebarMenuButton
-                      asChild
-                      className="hover:bg-white/50 dark:hover:bg-slate-800/50 hover:backdrop-blur-sm transition-all duration-200"
-                    >
-                      <a href={item.url}>
-                        <item.icon />
-                        <span>{item.title}</span>
-                      </a>
+                      </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 </motion.div>
